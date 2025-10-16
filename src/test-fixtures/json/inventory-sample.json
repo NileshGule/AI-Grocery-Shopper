@@ -1,0 +1,6 @@
+{
+  "items": [
+    { "name": "Tomatoes", "quantity": 4, "expiry": "2025-10-20" },
+    { "name": "Pasta", "quantity": 2, "expiry": "2026-01-01" }
+  ]
+}
