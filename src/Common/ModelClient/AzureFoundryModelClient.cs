@@ -53,7 +53,7 @@ namespace Common.ModelClient
             
         }
 
-        public async Task<string> GenerateTextAsync(string prompt)
+        public async Task<string> GenerateTextAsync(string systemMessage, string prompt)
         {
             Console.WriteLine("Initializing AzureFoundryModelClient with OpenAIClient");
 
@@ -101,7 +101,7 @@ namespace Common.ModelClient
                     var model = await manager.GetModelInfoAsync(_deploymentOrModelName);
                     var chatClient = _openAiClient.GetChatClient(model?.ModelId);
 
-                    var systemMessage = "You are a helpful meal planning assistant. Respond with a list of grocery items needed for the meal plan. Limit the response to about 2000 words";
+                    // var systemMessage = "You are a helpful meal planning assistant. Respond with a list of grocery items needed for the meal plan. Limit the response to about 2000 words";
 
                     List<ChatMessage> messages =
                     [

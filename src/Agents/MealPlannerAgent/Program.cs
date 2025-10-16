@@ -18,8 +18,9 @@ app.MapGet("/health", () => Results.Ok("MealPlannerAgent OK"));
 app.MapPost("/plan", async (MealPlanRequest req, IModelClient client) =>
 {
     Console.WriteLine($"Received meal plan request: Preferences={req.Preferences}, Constraints={req.Constraints}");
+    var systemMessage = "You are a helpful meal planning assistant. Respond with a list of grocery items needed for the meal plan. Limit the response to about 2000 words";
     var prompt = $"Generate a 7-day meal plan for: {req.Preferences}\nConstraints: {req.Constraints}";
-    var llmResponse = await client.GenerateTextAsync(prompt);
+    var llmResponse = await client.GenerateTextAsync(systemMessage, prompt);
     // For bootstrap, return raw LLM response as part of structured response
     Console.WriteLine($"LLM Response: {llmResponse}");
     return Results.Ok(new MealPlanResponse (llmResponse ));

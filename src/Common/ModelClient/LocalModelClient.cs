@@ -9,18 +9,13 @@ namespace Common.ModelClient
 {
     public class LocalModelClient : IModelClient
     {
-        public async Task<string> GenerateTextAsync(string prompt)
+        public async Task<string> GenerateTextAsync(string systemMessage, string prompt)
         {
-            // Dummy implementation for bootstrap. Replace with HTTP calls to Docker Model Runner or Azure Foundry.
-            // return Task.FromResult($"[LOCAL MODEL] Echo: {prompt}");
-
             Console.WriteLine("Initializing Docker Model with OpenAIClient");
 
             var uri = new Uri(Environment.GetEnvironmentVariable("LLM_ENDPOINT") ?? "http://127.0.0.1:12434/engines/llama.cpp/v1");
             Console.WriteLine("LLM Endpoint: " + uri.ToString());
-
-            // var aliasOrModelId = Environment.GetEnvironmentVariable("LLM_MODEL_ID") ?? "deepseek-r1-distill-qwen-7b-generic-gpu:3";
-            // var aliasOrModelId = Environment.GetEnvironmentVariable("LLM_MODEL_ID") ?? "deepseek-r1-7b";
+            
             var aliasOrModelId = Environment.GetEnvironmentVariable("LLM_MODEL_ID") ?? "ai/smollm2";
 
             Console.WriteLine("LLM Model/Deployment: " + aliasOrModelId);
@@ -49,7 +44,7 @@ namespace Common.ModelClient
                 {
                     var chatClient = _openAiClient.GetChatClient(aliasOrModelId);
 
-                    var systemMessage = "You are a helpful meal planning assistant. Respond with a list of grocery items needed for the meal plan. Limit the response to about 2000 words";
+                    // var systemMessage = "You are a helpful meal planning assistant. Respond with a list of grocery items needed for the meal plan. Limit the response to about 2000 words";
 
                     List<ChatMessage> messages =
                     [
