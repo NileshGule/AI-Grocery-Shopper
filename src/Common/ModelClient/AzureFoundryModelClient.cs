@@ -92,7 +92,7 @@ namespace Common.ModelClient
             {
                 Endpoint = manager.Endpoint
             });
-            
+
             // If SDK client available, use ChatCompletions (chat-style) via OpenAIClient
             if (_openAiClient is not null && !string.IsNullOrEmpty(_deploymentOrModelName))
             {
@@ -133,6 +133,7 @@ namespace Common.ModelClient
                             outputBuilder.Append(chunk);
                         }
                     }
+                    return outputBuilder.ToString();
                 }
                 catch (Exception ex)
                 {
@@ -140,6 +141,7 @@ namespace Common.ModelClient
                     Console.Error.WriteLine($"OpenAI SDK call failed: {ex.Message}");
                 }
             }
+            return "[ERROR] Unable to generate text via OpenAI SDK.";
         }
 
         public async Task<float[]> GenerateEmbeddingsAsync(string input)

@@ -8,8 +8,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 // ...existing code...
 
-// builder.Services.AddSingleton<IModelClient, Common.ModelClient.LocalModelClient>();
-builder.Services.AddSingleton<IModelClient, Common.ModelClient.AzureFoundryModelClient>();
+builder.Services.AddSingleton<IModelClient, Common.ModelClient.LocalModelClient>();
+// builder.Services.AddSingleton<IModelClient, Common.ModelClient.AzureFoundryModelClient>();
 
 var app = builder.Build();
 
