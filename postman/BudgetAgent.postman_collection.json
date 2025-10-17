@@ -1,0 +1,38 @@
+{
+  "info": {
+    "name": "BudgetAgent",
+    "_postman_id": "budget-agent-collection",
+    "description": "Collection demonstrating /check-budget strict JSON response behavior",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Check Budget - fixture",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"items\": [\"egg\", \"milk\", \"bread\", \"cheese\", \"chicken\", \"rice\"],\n  \"budget\": 10.0\n}"
+        },
+        "url": {
+          "raw": "http://localhost:5001/check-budget",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5001",
+          "path": [
+            "check-budget"
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}

@@ -56,27 +56,102 @@ app.MapPost("/check-budget", async (BudgetRequest req, IModelClient client, Budg
     }
 
     // Over budget - ask LLM for suggestions to reduce cost
-    Console.WriteLine("Over budget - requesting LLM for adjustments");
+    var systemMsg = "You are an assistant whose ONLY allowed output is a single valid JSON object matching this schema: { \"items\": [ string ], \"totalCost\": number, \"note\": string }. Do not output any text, explanation, markup, or extra keys. Always use double quotes.";
 
-    var systemMsg = "You are an assistant that suggests lower-cost substitutions or removals to meet a shopping budget. Respond with a JSON object { \"items\": [ ... ] , \"note\": \"...\" } where items is the adjusted list.";
-    var prompt = $"Original items: [{string.Join(", ", req.Items)}]\nBudget: {req.Budget}\nTotalCost: {total}\nPlease suggest an adjusted shopping list to meet the budget and include a short note explaining changes.";
+    var basePrompt = $@"Original items: [{string.Join(", ", req.Items)}]
+Budget: {req.Budget}
+CurrentTotal: {total}
+Prices: {JsonSerializer.Serialize(svc.Prices)}
 
-    var llmResp = await client.GenerateTextAsync(systemMsg, prompt);
+Task: Suggest an adjusted shopping list that meets or is closest to the Budget.
+Requirements:
+- Return ONLY the JSON object: {{ ""items"": [ string ], ""totalCost"": number, ""note"": string }}.
+- items: array of product names.
+- totalCost: numeric sum computed using the provided Prices (use default price 2.0 for unknown items).
+- note: 1-2 sentence explanation.
+- Prefer substitutions over removals. Make minimal changes needed to meet budget.";
 
-    var (newItems, note) = svc.ParseAdjustedFromLLM(llmResp);
+    string lastRaw = string.Empty;
+    List<string> adjustedItems = new List<string>();
+    string adjustedNote = string.Empty;
+    float adjustedTotal = 0f;
+    bool parsed = false;
 
-    Console.WriteLine($"Parsed LLM response: {newItems.Count} items, Note: {note}");
-    
-    if (!newItems.Any())
+    var allowedKeys = new HashSet<string>(new[] { "items", "totalCost", "note" }, StringComparer.OrdinalIgnoreCase);
+    int maxAttempts = 3;
+
+    for (int attempt = 1; attempt <= maxAttempts; attempt++)
     {
-        return Results.Ok(new BudgetResponse(req.Items, total, "LLM response could not be parsed; original list returned. Raw LLM: " + llmResp));
+        var attemptPrompt = basePrompt;
+        if (attempt > 1)
+        {
+            attemptPrompt += "\n\nFollow-up: Output must be EXACT JSON matching schema only. No extra text. Return only the JSON object.";
+        }
+
+        lastRaw = await client.GenerateTextAsync(systemMsg, attemptPrompt);
+
+        // Extract JSON object substring
+        var start = lastRaw.IndexOf('{');
+        var end = lastRaw.LastIndexOf('}');
+        var adjustedJson = lastRaw;
+        if (start >= 0 && end > start)
+            adjustedJson = lastRaw[start..(end + 1)];
+
+        try
+        {
+            using var doc = JsonDocument.Parse(adjustedJson);
+            var root = doc.RootElement;
+            if (root.ValueKind != JsonValueKind.Object)
+                throw new Exception("root is not an object");
+
+            // Ensure no extra keys
+            var keySet = new HashSet<string>(root.EnumerateObject().Select(p => p.Name), StringComparer.OrdinalIgnoreCase);
+            if (!allowedKeys.SetEquals(keySet))
+                throw new Exception("unexpected or missing top-level keys");
+
+            // Validate items
+            var itemsElem = root.GetProperty("items");
+            if (itemsElem.ValueKind != JsonValueKind.Array)
+                throw new Exception("items is not an array");
+
+            var newItems = new List<string>();
+            foreach (var el in itemsElem.EnumerateArray())
+            {
+                if (el.ValueKind != JsonValueKind.String)
+                    throw new Exception("items must be strings");
+                newItems.Add(el.GetString() ?? string.Empty);
+            }
+
+            // Validate totalCost
+            var totalElem = root.GetProperty("totalCost");
+            if (totalElem.ValueKind != JsonValueKind.Number)
+                throw new Exception("totalCost is not a number");
+
+            // Validate note
+            var note = root.GetProperty("note").GetString() ?? string.Empty;
+
+            // Recalculate total using local prices to be authoritative
+            var recalculated = svc.CalculateTotal(newItems);
+
+            adjustedItems = newItems;
+            adjustedNote = note;
+            adjustedTotal = recalculated;
+            parsed = true;
+            break;
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"BudgetAgent: parse attempt {attempt} failed: {ex.Message}");
+            // try again until maxAttempts
+        }
     }
 
-    var newTotal = svc.CalculateTotal(newItems);
+    if (!parsed)
+    {
+        return Results.Ok(new BudgetResponse(req.Items, total, "LLM response could not be parsed after retries; original list returned. Raw LLM: " + lastRaw));
+    }
 
-    Console.WriteLine($"LLM suggested {newItems.Count} items with total cost: {newTotal}");
-
-    return Results.Ok(new BudgetResponse(newItems.ToArray(), newTotal, note));
+    return Results.Ok(new BudgetResponse(adjustedItems.ToArray(), adjustedTotal, adjustedNote));
 });
 
 app.Run();
