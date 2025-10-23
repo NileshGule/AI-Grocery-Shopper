@@ -18,3 +18,9 @@ services:
     build: ./src/UI
     ports:
       - "3000:80"
+  shopper:
+    build: ./src/Agents/ShopperAgent
+    ports:
+      - "5003:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
