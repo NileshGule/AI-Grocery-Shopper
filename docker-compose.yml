@@ -1,19 +1,33 @@
 version: '3.8'
 services:
-  mealplanner:
-    build: ./src/Agents/MealPlannerAgent
+  budget:
+    build: ./src/Agents/BudgetAgent
     ports:
       - "5001:80"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
+    models:
+      - llm
+  inventory:
+    build: ./src/Agents/InventoryAgent
+    ports:
+      - "5002:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    models:
+      - llm
+  mealplanner:
+    build: ./src/Agents/MealPlannerAgent
+    ports:
+      - "5003:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    models:
+      - llm
   orchestrator:
     build: ./src/Orchestrator
     ports:
       - "5000:80"
-  model-runner:
-    image: ghcr.io/some/model-runner:latest
-    ports:
-      - "8000:8000"
   ui:
     build: ./src/UI
     ports:
@@ -21,6 +35,11 @@ services:
   shopper:
     build: ./src/Agents/ShopperAgent
     ports:
-      - "5003:80"
+      - "5004:80"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
+    models:
+      - llm
+models:
+  llm:
+    model: ai/smollm2

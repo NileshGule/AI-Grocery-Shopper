@@ -10,7 +10,7 @@
         <div class="row g-3 align-items-center">
             <div class="col-md-3 text-muted fw-bold">Meal description</div>
             <div class="col-md-9">
-                <textarea class="form-control" asp-for="Input.Description" id="Input_Description" rows="3">@(string.IsNullOrEmpty(Model.Input?.Description) ? "Help me prepare 3 meals over Christmas weekend for family gathering of 10 people" : Model.Input.Description)</textarea>
+                <textarea class="form-control" asp-for="Input.Description" id="Input_Description" rows="3" placeholder="Help me prepare 3 meals over Christmas weekend for family gathering of 10 people"></textarea>
             </div>
 
             <div class="col-md-3 text-muted fw-bold">Number of meals</div>
