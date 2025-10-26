@@ -1,6 +1,9 @@
 using System.Net.Http.Json;
 using UI.Models;
 using Microsoft.Extensions.Configuration;
+using System.Net.Http;
+using System.Threading.Tasks;
+using System;
 
 namespace UI.Agents
 {
@@ -22,10 +25,19 @@ namespace UI.Agents
             // 1. Meal Planner -> /plan
             var mealPlannerUrl = _config["AgentEndpoints:MealPlanner"];
             var mealClient = _httpFactory.CreateClient();
+            mealClient.Timeout = TimeSpan.FromSeconds(10);
             try
             {
-                var mpReq = new { Preferences = input.Description ?? "", Constraints = $"meals={input.NumberOfMeals}; prefs={string.Join(',', input.DietaryPreferences ?? new List<string>())}" };
-                var mpResp = await mealClient.PostAsJsonAsync($"{mealPlannerUrl}/plan", mpReq);
+                Console.WriteLine("Calling MealPlanner...");
+                var mpReq = new { Preferences = input.Description ?? "", Constraints = $"meals={input.NumberOfMeals}; preferences={string.Join(',', input.DietaryPreferences ?? new List<string>())}" };
+
+                Console.WriteLine($"MealPlanner Request: {System.Text.Json.JsonSerializer.Serialize(mpReq)}");
+
+                // Use retry helper to cope with compose startup ordering / transient DNS errors
+                var mpResp = await PostWithRetriesAsync(mealClient, $"{mealPlannerUrl}/plan", mpReq, retries: 6, initialDelayMs: 1000);
+
+                Console.WriteLine($"MealPlanner Response Status: {mpResp.StatusCode}");
+
                 mpResp.EnsureSuccessStatusCode();
                 var mealPlan = await mpResp.Content.ReadFromJsonAsync<MealPlanResponse>();
                 result.MealPlanResponse = mealPlan;
@@ -92,6 +104,44 @@ namespace UI.Agents
             }
 
             return result;
+        }
+
+        // Simple retry helper for HTTP POST JSON calls. Retries on HttpRequestException or non-success status codes.
+        private static async Task<HttpResponseMessage> PostWithRetriesAsync(HttpClient client, string url, object payload, int retries = 4, int initialDelayMs = 500)
+        {
+            if (retries < 1) retries = 1;
+            Exception lastEx = null!;
+            for (int attempt = 1; attempt <= retries; attempt++)
+            {
+                try
+                {
+                    var resp = await client.PostAsJsonAsync(url, payload);
+                    // if success or client error (4xx) then return so caller can decide
+                    if (resp.IsSuccessStatusCode) return resp;
+                    // for server errors (5xx) we may retry
+                    if ((int)resp.StatusCode >= 500 && attempt < retries)
+                    {
+                        await Task.Delay(initialDelayMs * attempt);
+                        continue;
+                    }
+                    return resp;
+                }
+                catch (HttpRequestException ex)
+                {
+                    lastEx = ex;
+                    if (attempt == retries) throw;
+                    await Task.Delay(initialDelayMs * attempt);
+                }
+                catch (TaskCanceledException ex)
+                {
+                    // timeout
+                    lastEx = ex;
+                    if (attempt == retries) throw;
+                    await Task.Delay(initialDelayMs * attempt);
+                }
+            }
+
+            throw lastEx ?? new InvalidOperationException("PostWithRetriesAsync failed");
         }
     }
 }

@@ -5,7 +5,7 @@ using System.Text.Json;
 var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
 
-app.MapGet("/health", () => Results.Ok("InventoryAgent OK"));
+app.MapGet("/health", () => Results.Ok("InventoryAgent OK")).DisableAntiforgery();
 
 app.MapPost("/inventory-check", async (InventoryRequest req) =>
 {
@@ -50,7 +50,7 @@ app.MapPost("/inventory-check", async (InventoryRequest req) =>
     }
 
     return Results.Ok(new InventoryCheckResponse (missing.ToArray() ));
-});
+}).DisableAntiforgery();
 
 app.Run();
 

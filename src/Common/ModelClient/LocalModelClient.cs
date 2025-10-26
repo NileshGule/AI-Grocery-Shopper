@@ -13,10 +13,10 @@ namespace Common.ModelClient
         {
             Console.WriteLine("Initializing Docker Model with OpenAIClient");
 
-            var uri = new Uri(Environment.GetEnvironmentVariable("LLM_ENDPOINT") ?? "http://127.0.0.1:12434/engines/llama.cpp/v1");
+            var uri = new Uri(Environment.GetEnvironmentVariable("LLM_URL") ?? "http://127.0.0.1:12434/engines/llama.cpp/v1");
             Console.WriteLine("LLM Endpoint: " + uri.ToString());
             
-            var aliasOrModelId = Environment.GetEnvironmentVariable("LLM_MODEL_ID") ?? "ai/smollm2";
+            var aliasOrModelId = Environment.GetEnvironmentVariable("LLM_MODEL") ?? "ai/smollm2";
 
             Console.WriteLine("LLM Model/Deployment: " + aliasOrModelId);
 

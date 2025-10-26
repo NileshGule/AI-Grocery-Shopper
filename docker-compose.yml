@@ -5,7 +5,6 @@ services:
       dockerfile: ./Agents/BudgetAgent/Dockerfile
     ports:
       - "5001:80"
-    
     models:
       - llm
   inventory:
@@ -29,6 +28,11 @@ services:
     build: ./src/UI
     ports:
       - "3000:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - DataProtection__KeyPath=/keys
+    volumes:
+      - ./data/ui-keys:/keys
   shopper:
     build: 
       context: ./src
@@ -40,3 +44,4 @@ services:
 models:
   llm:
     model: ai/smollm2
+    # model: ai/gemma3

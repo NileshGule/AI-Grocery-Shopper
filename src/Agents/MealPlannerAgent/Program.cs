@@ -6,7 +6,8 @@ using System.Security.AccessControl;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ...existing code...
+// Ensure the app listens on all network interfaces inside the container
+builder.WebHost.UseUrls("http://0.0.0.0:80");
 
 builder.Services.AddSingleton<IModelClient, Common.ModelClient.LocalModelClient>();
 // builder.Services.AddSingleton<IModelClient, Common.ModelClient.AzureFoundryModelClient>();
