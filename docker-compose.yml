@@ -1,43 +1,40 @@
-version: '3.8'
 services:
   budget:
-    build: ./src/Agents/BudgetAgent
+    build: 
+      context: ./src
+      dockerfile: ./Agents/BudgetAgent/Dockerfile
     ports:
       - "5001:80"
-    environment:
-      - ASPNETCORE_ENVIRONMENT=Development
+    
     models:
       - llm
   inventory:
-    build: ./src/Agents/InventoryAgent
+    build: 
+      context: ./src
+      dockerfile: ./Agents/InventoryAgent/Dockerfile
     ports:
       - "5002:80"
-    environment:
-      - ASPNETCORE_ENVIRONMENT=Development
     models:
       - llm
   mealplanner:
-    build: ./src/Agents/MealPlannerAgent
+    build: 
+      context: ./src
+      dockerfile: ./Agents/MealPlannerAgent/Dockerfile
     ports:
       - "5003:80"
-    environment:
-      - ASPNETCORE_ENVIRONMENT=Development
     models:
       - llm
-  orchestrator:
-    build: ./src/Orchestrator
-    ports:
-      - "5000:80"
+  
   ui:
     build: ./src/UI
     ports:
       - "3000:80"
   shopper:
-    build: ./src/Agents/ShopperAgent
+    build: 
+      context: ./src
+      dockerfile: ./Agents/ShopperAgent/Dockerfile
     ports:
       - "5004:80"
-    environment:
-      - ASPNETCORE_ENVIRONMENT=Development
     models:
       - llm
 models:
