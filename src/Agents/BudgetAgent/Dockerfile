@@ -16,6 +16,6 @@ RUN dotnet publish "BudgetAgent.csproj" -c Release -o /app/publish /p:UseAppHost
 # runtime image
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS runtime
 WORKDIR /app
-EXPOSE 80
+# EXPOSE 80
 COPY --from=build /app/publish ./
 ENTRYPOINT ["dotnet", "BudgetAgent.dll"]

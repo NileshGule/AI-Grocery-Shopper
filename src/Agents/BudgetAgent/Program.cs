@@ -24,6 +24,7 @@ using BudgetAgent;
 // };
 
 var builder = WebApplication.CreateBuilder(args);
+builder.WebHost.UseUrls("http://0.0.0.0:80");
 
 // Load prices from prices.json in app base dir
 var priceFile = Path.Combine(AppContext.BaseDirectory, "prices.json");
@@ -42,6 +43,7 @@ app.MapGet("/health", () => Results.Ok("BudgetAgent OK"));
 
 app.MapPost("/check-budget", async (BudgetRequest req, IModelClient client, BudgetService svc) =>
 {
+    Console.WriteLine($"BudgetService Prices count: {svc.Prices.Count}");
 
     Console.WriteLine($"Received budget request: Items=[{string.Join(", ", req.Items)}], Budget={req.Budget}");
 

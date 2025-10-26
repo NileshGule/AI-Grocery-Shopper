@@ -1,7 +1,11 @@
 {
-  "items": [
-    { "name": "Tomatoes", "qty": 4 },
-    { "name": "Pasta", "qty": 1 }
-  ],
-  "targetBudget": 50.0
+    "Items": [
+        "spaghetti",
+        "tomato",
+        "basil",
+        "chicken breast",
+        "lettuce",
+        "olive oil"
+    ],
+    "Budget": 75.0
 }
