@@ -27,14 +27,16 @@ namespace UI.Models
     public class BudgetResponse
     {
         public decimal TotalCost { get; set; }
-        public List<ItemCost> Items { get; set; } = new();
+        public List<string> Items { get; set; } = new();
+
+        public string Note { get; set; } = string.Empty;
     }
 
-    public class ItemCost
-    {
-        public string Name { get; set; }
-        public decimal Cost { get; set; }
-    }
+    // public class ItemCost
+    // {
+    //     public string Name { get; set; }
+    //     public decimal Cost { get; set; }
+    // }
 
     public class InventoryResponse
     {

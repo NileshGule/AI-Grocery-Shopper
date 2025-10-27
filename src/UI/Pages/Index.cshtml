@@ -64,6 +64,13 @@
             </ul>
         }
 
+        <h2 class="h5">Inventory</h2>
+        @if (Model.Result.InventoryResponse != null)
+        {
+            <div>Available: @string.Join(", ", Model.Result.InventoryResponse.Available)</div>
+            <div>Missing: @string.Join(", ", Model.Result.InventoryResponse.Missing)</div>
+        }
+
         <h2 class="h5">Budget</h2>
         @if (Model.Result.BudgetResponse != null)
         {
@@ -71,17 +78,12 @@
             <ul>
                 @foreach (var item in Model.Result.BudgetResponse.Items)
                 {
-                    <li>@item.Name - @item.Cost</li>
+                    <li>@item</li>
                 }
             </ul>
         }
 
-        <h2 class="h5">Inventory</h2>
-        @if (Model.Result.InventoryResponse != null)
-        {
-            <div>Available: @string.Join(", ", Model.Result.InventoryResponse.Available)</div>
-            <div>Missing: @string.Join(", ", Model.Result.InventoryResponse.Missing)</div>
-        }
+        
 
         <h2 class="h5">Shopping</h2>
         @if (Model.Result.ShopperResponse != null)

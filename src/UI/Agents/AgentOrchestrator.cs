@@ -71,6 +71,8 @@ namespace UI.Agents
                 invResp.EnsureSuccessStatusCode();
                 var inv = await invResp.Content.ReadFromJsonAsync<InventoryResponse>();
                 result.InventoryResponse = inv;
+
+                Console.WriteLine($"InventoryAgent Response Missing Items: {string.Join(", ", result.InventoryResponse?.Missing ?? new List<string>())}");
                 result.Steps.Add("InventoryAgent returned availability info");
             }
             catch (Exception ex)
@@ -84,8 +86,8 @@ namespace UI.Agents
             try
             {
                 var budgetClient = _httpFactory.CreateClient();
-                var budgetReq = new { Budget = input.Budget, Meals = result.MealPlanResponse?.Meals ?? new List<MealDto>() };
-                var budgetResp = await budgetClient.PostAsJsonAsync($"{budgetUrl}/budget", budgetReq);
+                var budgetReq = new { Budget = input.Budget, Items = result.InventoryResponse?.Missing ?? new List<string>() };
+                var budgetResp = await budgetClient.PostAsJsonAsync($"{budgetUrl}/check-budget", budgetReq);
                 budgetResp.EnsureSuccessStatusCode();
                 var budget = await budgetResp.Content.ReadFromJsonAsync<BudgetResponse>();
                 result.BudgetResponse = budget;
@@ -103,7 +105,7 @@ namespace UI.Agents
             try
             {
                 var shopClient = _httpFactory.CreateClient();
-                var shopReq = new { Items = result.BudgetResponse?.Items?.Select(i => i.Name).ToArray() ?? new string[0], Budget = result.BudgetResponse?.TotalCost ?? 0m };
+                var shopReq = new { Items = result.BudgetResponse?.Items, Budget = result.BudgetResponse?.TotalCost ?? 0m };
                 var shopResp = await shopClient.PostAsJsonAsync($"{shopUrl}/prepare-shopping-list", shopReq);
                 shopResp.EnsureSuccessStatusCode();
                 var shop = await shopResp.Content.ReadFromJsonAsync<ShopperResponse>();

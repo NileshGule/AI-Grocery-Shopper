@@ -10,8 +10,6 @@ app.MapGet("/health", () => Results.Ok("InventoryAgent OK")).DisableAntiforgery(
 
 app.MapPost("/inventory-check", async (InventoryRequest req) =>
 {
-    Console.WriteLine($"Received inventory check request: Items=[{string.Join(", ", req.Items)}]");
-
     // Load local inventory JSON file
     var inventoryPath = Path.Combine(AppContext.BaseDirectory, "inventory.json");
     if (!File.Exists(inventoryPath))
@@ -44,24 +42,28 @@ app.MapPost("/inventory-check", async (InventoryRequest req) =>
     }
 
     var missing = new List<string>();
+    var available = new List<string>();
+
     foreach (var item in req.Items)
     {
-        if (!inventory.Items.Any(i => string.Equals(i.Name, item, StringComparison.OrdinalIgnoreCase)))
+        if (inventory.Items.Any(i => string.Equals(i.Name, item, StringComparison.OrdinalIgnoreCase)))
+        {
+            available.Add(item);
+        }
+        else
         {
             missing.Add(item);
         }
     }
 
-    Console.WriteLine($"Inventory check result: MissingItems=[{string.Join(", ", missing)}]");
-
-    return Results.Ok(new InventoryCheckResponse (missing.ToArray() ));
+    return Results.Ok(new InventoryResponse(available.ToArray(), missing.ToArray()));
 }).DisableAntiforgery();
 
 app.Run();
 
 // DTOs and file models
 public record InventoryRequest(string[] Items);
-public record InventoryCheckResponse(string[] MissingItems);
+public record InventoryResponse(string[] Available, string[] Missing);
 
 public class InventoryFile
 {
