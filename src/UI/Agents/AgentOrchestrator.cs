@@ -105,7 +105,7 @@ namespace UI.Agents
             try
             {
                 var shopClient = _httpFactory.CreateClient();
-                var shopReq = new { Items = result.BudgetResponse?.Items, Budget = result.BudgetResponse?.TotalCost ?? 0m };
+                var shopReq = new { Items = result.BudgetResponse?.Items};
                 var shopResp = await shopClient.PostAsJsonAsync($"{shopUrl}/prepare-shopping-list", shopReq);
                 shopResp.EnsureSuccessStatusCode();
                 var shop = await shopResp.Content.ReadFromJsonAsync<ShopperResponse>();
