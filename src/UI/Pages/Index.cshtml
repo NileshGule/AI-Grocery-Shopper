@@ -83,18 +83,28 @@
             </ul>
         }
 
-        
-
         <h2 class="h5">Shopping</h2>
         @if (Model.Result.ShopperResponse != null)
         {
             <div>Summary: @Model.Result.ShopperResponse.Summary</div>
-            <ul>
-                @foreach (var i in Model.Result.ShopperResponse.ShoppingList)
+            @if (Model.Result.ShopperResponse.Categories != null && Model.Result.ShopperResponse.Categories.Any())
+            {
+                foreach (var cat in Model.Result.ShopperResponse.Categories)
                 {
-                    <li>@i</li>
+                    <div class="mt-3">
+                        <h3>@cat.Key</h3>
+                        <ul>
+                            @foreach (var item in cat.Value)
+                            {
+                                <li>
+                                    <strong>@item.Name</strong>
+                                    <div class="text-muted">@item.Description</div>
+                                </li>
+                            }
+                        </ul>
+                    </div>
                 }
-            </ul>
+            }
         }
 
         @if (Model.Result.Errors.Any())
