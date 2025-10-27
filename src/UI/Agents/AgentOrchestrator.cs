@@ -49,25 +49,7 @@ namespace UI.Agents
                 return result;
             }
 
-            // 2. Budget Agent -> /budget
-            var budgetUrl = _config["AgentEndpoints:BudgetAgent"];
-            try
-            {
-                var budgetClient = _httpFactory.CreateClient();
-                var budgetReq = new { Budget = input.Budget, Meals = result.MealPlanResponse?.Meals ?? new List<MealDto>() };
-                var budgetResp = await budgetClient.PostAsJsonAsync($"{budgetUrl}/budget", budgetReq);
-                budgetResp.EnsureSuccessStatusCode();
-                var budget = await budgetResp.Content.ReadFromJsonAsync<BudgetResponse>();
-                result.BudgetResponse = budget;
-                result.Steps.Add("BudgetAgent returned cost estimate");
-            }
-            catch (Exception ex)
-            {
-                result.Errors.Add($"BudgetAgent error: {ex.Message}");
-                return result;
-            }
-
-            // 3. Inventory Agent -> /check
+            // 2. Inventory Agent -> /check
             var invUrl = _config["AgentEndpoints:InventoryAgent"];
             try
             {
@@ -84,6 +66,25 @@ namespace UI.Agents
                 result.Errors.Add($"InventoryAgent error: {ex.Message}");
                 return result;
             }
+
+            // 3. Budget Agent -> /budget
+            var budgetUrl = _config["AgentEndpoints:BudgetAgent"];
+            try
+            {
+                var budgetClient = _httpFactory.CreateClient();
+                var budgetReq = new { Budget = input.Budget, Meals = result.MealPlanResponse?.Meals ?? new List<MealDto>() };
+                var budgetResp = await budgetClient.PostAsJsonAsync($"{budgetUrl}/budget", budgetReq);
+                budgetResp.EnsureSuccessStatusCode();
+                var budget = await budgetResp.Content.ReadFromJsonAsync<BudgetResponse>();
+                result.BudgetResponse = budget;
+                result.Steps.Add("BudgetAgent returned cost estimate");
+            }
+            catch (Exception ex)
+            {
+                result.Errors.Add($"BudgetAgent error: {ex.Message}");
+                return result;
+            }
+           
 
             // 4. Shopper Agent -> /prepare-shopping-list
             var shopUrl = _config["AgentEndpoints:ShopperAgent"];
