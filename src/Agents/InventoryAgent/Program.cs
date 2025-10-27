@@ -10,6 +10,8 @@ app.MapGet("/health", () => Results.Ok("InventoryAgent OK")).DisableAntiforgery(
 
 app.MapPost("/inventory-check", async (InventoryRequest req) =>
 {
+    Console.WriteLine($"Received inventory check request: Items=[{string.Join(", ", req.Items)}]");
+
     // Load local inventory JSON file
     var inventoryPath = Path.Combine(AppContext.BaseDirectory, "inventory.json");
     if (!File.Exists(inventoryPath))
@@ -49,6 +51,8 @@ app.MapPost("/inventory-check", async (InventoryRequest req) =>
             missing.Add(item);
         }
     }
+
+    Console.WriteLine($"Inventory check result: MissingItems=[{string.Join(", ", missing)}]");
 
     return Results.Ok(new InventoryCheckResponse (missing.ToArray() ));
 }).DisableAntiforgery();

@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System;
+using System.Linq;
 
 namespace UI.Agents
 {
@@ -54,8 +55,19 @@ namespace UI.Agents
             try
             {
                 var invClient = _httpFactory.CreateClient();
-                var invReq = new { Meals = result.MealPlanResponse?.Meals ?? new List<MealDto>() };
-                var invResp = await invClient.PostAsJsonAsync($"{invUrl}/check", invReq);
+                // Extract ingredient names from the meal plan to build the inventory request
+                var items = result.MealPlanResponse?.Meals?
+                    .SelectMany(m => m.Ingredients ?? new List<string>())
+                    .Select(i => i?.Trim())
+                    .Where(i => !string.IsNullOrEmpty(i))
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .ToArray()
+                    ?? new string[0];
+
+                Console.WriteLine($"InventoryAgent Request Items: {string.Join(", ", items)}");
+
+                var invReq = new { Items = items };
+                var invResp = await invClient.PostAsJsonAsync($"{invUrl}/inventory-check", invReq);
                 invResp.EnsureSuccessStatusCode();
                 var inv = await invResp.Content.ReadFromJsonAsync<InventoryResponse>();
                 result.InventoryResponse = inv;
