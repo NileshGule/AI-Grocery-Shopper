@@ -105,7 +105,7 @@ app.MapPost("/prepare-shopping-list", async (ShoppingRequest req, IModelClient c
         if (!descriptions.ContainsKey(lookup) || string.IsNullOrWhiteSpace(descriptions[lookup]))
         {
             // Per-item prompt: ask for a single-sentence description only
-            var perItemSystem = "You are an assistant that returns a single sentence description for the provided product name. Only output the description sentence, no JSON or extra text.";
+            var perItemSystem = "You are a an assistant that returns a single sentence description for the provided product name. Only output the description sentence in Michelin style, no JSON or extra text.";
             var perItemPrompt = key;
             try
             {

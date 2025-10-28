@@ -7,31 +7,43 @@
 
 <div class="card p-3 mb-4">
     <form method="post" id="mainForm">
-        <div class="row g-3 align-items-center">
-            <div class="col-md-3 text-muted fw-bold">Meal description</div>
-            <div class="col-md-9">
-                <textarea class="form-control" asp-for="Input.Description" id="Input_Description" rows="3" placeholder="Help me prepare 3 meals over Christmas weekend for family gathering of 10 people"></textarea>
-            </div>
+        <div class="table-responsive">
+            <table class="table table-borderless align-middle">
+                <tbody>
+                    <tr>
+                        <th class="text-muted fw-bold" style="width:25%">Meal description</th>
+                        <td>
+                            <textarea class="form-control" asp-for="Input.Description" id="Input_Description" rows="3" placeholder="Help me prepare 3 meals over Christmas weekend for family gathering of 10 people"></textarea>
+                        </td>
+                    </tr>
 
-            <div class="col-md-3 text-muted fw-bold">Number of meals</div>
-            <div class="col-md-3">
-                <input class="form-control" type="number" asp-for="Input.NumberOfMeals" id="Input_NumberOfMeals" value="3" />
-            </div>
+                    <tr>
+                        <th class="text-muted fw-bold">Number of meals</th>
+                        <td>
+                            <input class="form-control" type="number" asp-for="Input.NumberOfMeals" id="Input_NumberOfMeals" value="3" />
+                        </td>
+                    </tr>
 
-            <div class="col-md-3 text-muted fw-bold">Dietary preferences</div>
-            <div class="col-md-6">
-                <input class="form-control" asp-for="PreferencesRaw" id="PreferencesRaw" placeholder="e.g. vegetarian, nut-free" />
-            </div>
+                    <tr>
+                        <th class="text-muted fw-bold">Dietary preferences</th>
+                        <td>
+                            <input class="form-control" asp-for="PreferencesRaw" id="PreferencesRaw" placeholder="e.g. vegetarian, nut-free" />
+                        </td>
+                    </tr>
 
-            <div class="col-md-3 text-muted fw-bold">Budget</div>
-            <div class="col-md-3">
-                <input class="form-control" type="number" step="0.01" asp-for="Input.Budget" id="Input_Budget" value="25" />
-            </div>
+                    <tr>
+                        <th class="text-muted fw-bold">Budget</th>
+                        <td>
+                            <input class="form-control" type="number" step="0.01" asp-for="Input.Budget" id="Input_Budget" value="25" />
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
 
-        <div class="mt-3 d-flex justify-content-end gap-2">
-            <button class="btn btn-secondary" type="button" id="cancelBtn">Cancel</button>
-            <button class="btn btn-primary" type="submit">Generate</button>
+        <div class="mt-3 d-flex justify-content-center gap-2">
+            <button class="btn btn-danger mx-2" type="button" id="cancelBtn">Cancel</button>
+            <button class="btn btn-success mx-2" type="submit">Generate</button>
         </div>
     </form>
 </div>
@@ -58,7 +70,8 @@
                     <li>
                         <strong>@m.Name</strong>
                         <div>Ingredients: @string.Join(", ", m.Ingredients)</div>
-                        <div>Notes: @m.Notes</div>
+                        <br/>
+                        <div><i>Notes</i>: @m.Notes</div>
                     </li>
                 }
             </ul>
@@ -125,15 +138,61 @@
         (function(){
             var cancelBtn = document.getElementById('cancelBtn');
             if (!cancelBtn) return;
-            cancelBtn.addEventListener('click', function(){
-                var desc = document.getElementById('Input_Description');
-                var meals = document.getElementById('Input_NumberOfMeals');
-                var prefs = document.getElementById('PreferencesRaw');
-                var budget = document.getElementById('Input_Budget');
-                if(desc) desc.value = '';
-                if(meals) meals.value = '';
-                if(prefs) prefs.value = '';
-                if(budget) budget.value = '';
+            cancelBtn.addEventListener('click', function(e){
+                alert('Resetting the form');
+                e.preventDefault();
+                var form = document.getElementById('mainForm');
+                if (!form) return;
+
+                // Clear all inputs, textareas, selects
+                var controls = form.querySelectorAll('input, textarea, select');
+                controls.forEach(function(el){
+                    var tag = el.tagName.toLowerCase();
+                    var type = (el.type || '').toLowerCase();
+
+                    try {
+                        if (tag === 'textarea') {
+                            el.value = '';
+                            el.innerHTML = '';
+                            el.defaultValue = '';
+                            el.removeAttribute('value');
+                        } else if (tag === 'select') {
+                            // reset to first non-disabled option if present
+                            if (el.options && el.options.length > 0) {
+                                el.selectedIndex = -1;
+                                for (var k = 0; k < el.options.length; k++) {
+                                    el.options[k].selected = false;
+                                }
+                            }
+                        } else if (type === 'checkbox' || type === 'radio') {
+                            el.checked = false;
+                            el.defaultChecked = false;
+                        } else {
+                            // text, number, email, hidden, etc.
+                            el.value = '';
+                            el.defaultValue = '';
+                            el.removeAttribute('value');
+                        }
+
+                        // trigger input/change events in case any listeners rely on it
+                        try { el.dispatchEvent(new Event('input', { bubbles: true })); } catch(e){}
+                        try { el.dispatchEvent(new Event('change', { bubbles: true })); } catch(e){}
+                    } catch (err) {
+                        // ignore individual control errors
+                        console.error('clear control error', err);
+                    }
+                });
+
+                // As a fallback, call form.reset() to clear built-in values
+                try { form.reset(); } catch (err) {}
+
+                // Hide result section if visible
+                var resultCard = document.querySelector('.result-section');
+                if (resultCard) resultCard.style.display = 'none';
+
+                // focus the first textarea or input
+                var first = form.querySelector('textarea, input[type="text"], input[type="number"], input:not([type])');
+                if (first) first.focus();
             });
         })();
     </script>

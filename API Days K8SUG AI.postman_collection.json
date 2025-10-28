@@ -1,0 +1,266 @@
+{
+	"info": {
+		"_postman_id": "e1a37af2-4d92-483a-a1ee-cb106d696c63",
+		"name": "API Days K8SUG AI",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "29543173"
+	},
+	"item": [
+		{
+			"name": "New Request",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "Get Open AI Compatible models",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://127.0.0.1:12434/engines/llama.cpp/v1/models",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "12434",
+					"path": [
+						"engines",
+						"llama.cpp",
+						"v1",
+						"models"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Open AI Compatible Chat Completion",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"model\": \"ai/smollm2\",\n    \"messages\": [\n        {\n            \"role\": \"system\",\n            \"content\": \"You are a helpful assistant who always answers in a funny manner.\"\n        },\n        {\n            \"role\": \"user\",\n            \"content\": \"Explain the Doppler effect.\"\n        }\n    ]\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://127.0.0.1:12434/engines/llama.cpp/v1/completions",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "12434",
+					"path": [
+						"engines",
+						"llama.cpp",
+						"v1",
+						"completions"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Inventory Service Request",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:5002/health",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5002",
+					"path": [
+						"health"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Budget Service Request",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"items\": [\n    { \"name\": \"Tomatoes\", \"qty\": 4 },\n    { \"name\": \"Pasta\", \"qty\": 1 }\n  ],\n  \"targetBudget\": 50.0\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost/check-budget",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"path": [
+						"check-budget"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Inventory Service Request",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"items\": [\n    { \"name\": \"Tomatoes\", \"quantity\": 4, \"expiry\": \"2025-10-20\" },\n    { \"name\": \"Pasta\", \"quantity\": 2, \"expiry\": \"2026-01-01\" }\n  ]\n}\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:5002/inventory-check",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5002",
+					"path": [
+						"inventory-check"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Shopping Service Request",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"items\": [\"Tomatoes\", \"Pasta\", \"Olive Oil\"],\n  \"preferredStore\": \"Local Market\"\n}\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:5000/check-budget",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"check-budget"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Meal Planner Request",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"Preferences\": \"Vegetarian, Mediterranean, quick meals\",\n  \"Constraints\": \"No nuts, gluten-free options preferred\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:5003/plan",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5003",
+					"path": [
+						"plan"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
