@@ -63,8 +63,8 @@ function App() {
             </div>
           )}
 
-          <MealPlanDisplay mealPlan={result.mealPlanResponse} />
-          <InventoryDisplay inventory={result.inventoryResponse} />
+          <MealPlanDisplay mealPlan={result.mealPlanResponse} budget={requestedBudget} />
+          <InventoryDisplay inventory={result.inventoryResponse} budget={requestedBudget} />
           <BudgetDisplay budget={result.budgetResponse} requestedBudget={requestedBudget} />
           <ShoppingDisplay shopping={result.shopperResponse} />
 

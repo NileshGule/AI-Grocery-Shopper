@@ -4,9 +4,11 @@ import { InventoryDisplay } from "./InventoryDisplay";
 
 interface MealPlanDisplayProps {
   mealPlan: MealPlanResponse | null;
+  budget: number;
 }
 export const MealPlanDisplay: React.FC<MealPlanDisplayProps> = ({
   mealPlan,
+  budget,
 }) => {
   const [inventoryResponse, setInventoryResponse] = useState<InventoryResponse | null>(null);
   const [isCheckingInventory, setIsCheckingInventory] = useState(false);
@@ -119,7 +121,7 @@ export const MealPlanDisplay: React.FC<MealPlanDisplayProps> = ({
 
       {inventoryResponse && (
         <div className="mt-4">
-          <InventoryDisplay inventory={inventoryResponse} />
+          <InventoryDisplay inventory={inventoryResponse} budget={budget} />
         </div>
       )}
     </div>

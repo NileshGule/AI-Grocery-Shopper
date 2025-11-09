@@ -1,12 +1,53 @@
-import React from "react";
-import { InventoryResponse } from "../types";
+import React, { useState } from "react";
+import { InventoryResponse, BudgetResponse } from "../types";
+import { BudgetDisplay } from "./BudgetDisplay";
+
 interface InventoryDisplayProps {
   inventory: InventoryResponse | null;
+  budget: number;
 }
 export const InventoryDisplay: React.FC<InventoryDisplayProps> = ({
   inventory,
+  budget,
 }) => {
+  const [budgetResponse, setBudgetResponse] = useState<BudgetResponse | null>(null);
+  const [isCheckingBudget, setIsCheckingBudget] = useState(false);
+  const [budgetError, setBudgetError] = useState<string | null>(null);
+
   if (!inventory) return null;
+
+  const handleCheckBudget = async () => {
+    if (inventory.missing.length === 0) {
+      setBudgetError("No missing items to check budget for.");
+      return;
+    }
+
+    setIsCheckingBudget(true);
+    setBudgetError(null);
+    
+    try {
+      const response = await fetch('http://localhost:5001/check-budget', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ Items: inventory.missing, Budget: budget }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data: BudgetResponse = await response.json();
+      setBudgetResponse(data);
+    } catch (error) {
+      console.error('Error checking budget:', error);
+      setBudgetError(error instanceof Error ? error.message : 'Failed to check budget');
+    } finally {
+      setIsCheckingBudget(false);
+    }
+  };
+
   return (
     <div className="mb-4">
       {" "}
@@ -77,6 +118,39 @@ export const InventoryDisplay: React.FC<InventoryDisplayProps> = ({
           </div>{" "}
         </div>{" "}
       </div>{" "}
+
+      <div className="mt-4 text-center">
+        <button 
+          className="btn btn-success"
+          onClick={handleCheckBudget}
+          disabled={isCheckingBudget || inventory.missing.length === 0}
+        >
+          {isCheckingBudget ? (
+            <>
+              <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+              Checking Budget...
+            </>
+          ) : (
+            <>
+              <i className="bi bi-cash-stack me-2"></i>
+              Check Budget for Missing Items
+            </>
+          )}
+        </button>
+      </div>
+
+      {budgetError && (
+        <div className="alert alert-danger mt-3" role="alert">
+          <i className="bi bi-exclamation-triangle me-2"></i>
+          Error: {budgetError}
+        </div>
+      )}
+
+      {budgetResponse && (
+        <div className="mt-4">
+          <BudgetDisplay budget={budgetResponse} requestedBudget={budget} />
+        </div>
+      )}
     </div>
   );
 };

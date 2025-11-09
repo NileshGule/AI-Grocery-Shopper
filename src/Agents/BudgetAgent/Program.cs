@@ -17,7 +17,19 @@ using Microsoft.Extensions.AI;
 using OpenAI;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
+
 builder.WebHost.UseUrls("http://0.0.0.0:5001");
+
 
 // Load prices from prices.json in app base dir
 var priceFile = Path.Combine(AppContext.BaseDirectory, "prices.json");
@@ -31,6 +43,7 @@ builder.Services.AddSingleton(budgetService);
 builder.Services.AddSingleton<IModelClient, Common.ModelClient.LocalModelClient>();
 
 var app = builder.Build();
+app.UseCors();
 
 app.MapGet("/health", () => Results.Ok("BudgetAgent OK"));
 
