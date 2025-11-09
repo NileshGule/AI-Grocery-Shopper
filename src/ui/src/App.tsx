@@ -34,6 +34,15 @@ function App() {
     }
   };
 
+  const addStep = (step: string) => {
+    if (result) {
+      setResult({
+        ...result,
+        steps: [...result.steps, step],
+      });
+    }
+  };
+
   return (
     <div className="container py-4">
       <div className="d-flex align-items-center justify-content-between mb-4">
@@ -63,7 +72,7 @@ function App() {
             </div>
           )}
 
-          <MealPlanDisplay mealPlan={result.mealPlanResponse} budget={requestedBudget} />
+          <MealPlanDisplay mealPlan={result.mealPlanResponse} budget={requestedBudget} onStepComplete={addStep} />
           <InventoryDisplay inventory={result.inventoryResponse} budget={requestedBudget} />
           <BudgetDisplay budget={result.budgetResponse} requestedBudget={requestedBudget} />
           <ShoppingDisplay shopping={result.shopperResponse} />

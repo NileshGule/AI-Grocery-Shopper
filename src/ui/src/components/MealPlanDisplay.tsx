@@ -5,10 +5,12 @@ import { InventoryDisplay } from "./InventoryDisplay";
 interface MealPlanDisplayProps {
   mealPlan: MealPlanResponse | null;
   budget: number;
+  onStepComplete?: (step: string) => void;
 }
 export const MealPlanDisplay: React.FC<MealPlanDisplayProps> = ({
   mealPlan,
   budget,
+  onStepComplete,
 }) => {
   const [inventoryResponse, setInventoryResponse] = useState<InventoryResponse | null>(null);
   const [isCheckingInventory, setIsCheckingInventory] = useState(false);
@@ -45,6 +47,13 @@ export const MealPlanDisplay: React.FC<MealPlanDisplayProps> = ({
       const data: InventoryResponse = await response.json();
       setInventoryResponse(data);
       setInventoryCheckedSuccess(true);
+      
+      // Add step to Processing Steps
+      if (onStepComplete) {
+        const availableCount = data.available.length;
+        const missingCount = data.missing.length;
+        onStepComplete(`Inventory checked: ${availableCount} item(s) available, ${missingCount} item(s) missing`);
+      }
     } catch (error) {
       console.error('Error checking inventory:', error);
       setInventoryError(error instanceof Error ? error.message : 'Failed to check inventory');
