@@ -7,21 +7,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using BudgetAgent;
-
-// Simple in-memory price list (dummy prices)
-// var priceList = new Dictionary<string, float>(StringComparer.OrdinalIgnoreCase)
-// {
-//     { "egg", 0.2f },
-//     { "milk", 1.5f },
-//     { "bread", 2.0f },
-//     { "chicken", 5.0f },
-//     { "rice", 1.0f },
-//     { "beans", 1.2f },
-//     { "tomato", 0.5f },
-//     { "onion", 0.4f },
-//     { "cheese", 3.0f },
-//     { "lettuce", 1.0f }
-// };
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using Microsoft.Extensions.AI;
+using Azure.AI.OpenAI;
+using Azure.Identity;
+using Microsoft.Agents.AI;
+using Microsoft.Extensions.AI;
+using OpenAI;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.WebHost.UseUrls("http://0.0.0.0:80");
@@ -90,62 +83,45 @@ Requirements:
             attemptPrompt += "\n\nFollow-up: Output must be EXACT JSON matching schema only. No extra text. Return only the JSON object.";
         }
 
+        var endpoint = "https://ai-foundry-ai-hub.openai.azure.com/";
+        var apiKey = Environment.GetEnvironmentVariable("AZURE_FOUNDRY_OPENAI_APIKEY");
+        var model = "gpt-4.1-mini";
+
         lastRaw = await client.GenerateTextAsync(systemMsg, attemptPrompt);
 
-        // Extract JSON object substring
-        var start = lastRaw.IndexOf('{');
-        var end = lastRaw.LastIndexOf('}');
-        var adjustedJson = lastRaw;
-        if (start >= 0 && end > start)
-            adjustedJson = lastRaw[start..(end + 1)];
+        JsonElement schema = AIJsonUtilities.CreateJsonSchema(typeof(BudgetResponse));
 
-        try
-        {
-            using var doc = JsonDocument.Parse(adjustedJson);
-            var root = doc.RootElement;
-            if (root.ValueKind != JsonValueKind.Object)
-                throw new Exception("root is not an object");
+    ChatOptions chatOptions = new()
+    {
+        ResponseFormat = ChatResponseFormat.ForJsonSchema(
+            schema: schema,
+            schemaName: "BudgetResponse",
+            schemaDescription: "Information about a budget response including its items, total cost, and note")
+    };
 
-            // Ensure no extra keys
-            var keySet = new HashSet<string>(root.EnumerateObject().Select(p => p.Name), StringComparer.OrdinalIgnoreCase);
-            if (!allowedKeys.SetEquals(keySet))
-                throw new Exception("unexpected or missing top-level keys");
-
-            // Validate items
-            var itemsElem = root.GetProperty("items");
-            if (itemsElem.ValueKind != JsonValueKind.Array)
-                throw new Exception("items is not an array");
-
-            var newItems = new List<string>();
-            foreach (var el in itemsElem.EnumerateArray())
+    AIAgent agent = new AzureOpenAIClient(
+    new Uri(endpoint),
+    new AzureCliCredential())
+        .GetChatClient(model)
+        .CreateAIAgent(
+            new ChatClientAgentOptions()
             {
-                if (el.ValueKind != JsonValueKind.String)
-                    throw new Exception("items must be strings");
-                newItems.Add(el.GetString() ?? string.Empty);
+                Name = "BudgetAgent",
+                Instructions = systemMsg,
+                ChatOptions = chatOptions
             }
+    );
 
-            // Validate totalCost
-            var totalElem = root.GetProperty("totalCost");
-            if (totalElem.ValueKind != JsonValueKind.Number)
-                throw new Exception("totalCost is not a number");
+    var agentResponse = await agent.RunAsync(attemptPrompt);
 
-            // Validate note
-            var note = root.GetProperty("note").GetString() ?? string.Empty;
+    Console.WriteLine($"LLM Response: {agentResponse.Text}");
 
-            // Recalculate total using local prices to be authoritative
-            var recalculated = svc.CalculateTotal(newItems);
+    var budgetResponse = agentResponse.Deserialize<BudgetResponse>(JsonSerializerOptions.Web);
 
-            adjustedItems = newItems;
-            adjustedNote = note;
-            adjustedTotal = recalculated;
-            parsed = true;
-            break;
-        }
-        catch (Exception ex)
-        {
-            Console.Error.WriteLine($"BudgetAgent: parse attempt {attempt} failed: {ex.Message}");
-            // try again until maxAttempts
-        }
+    Console.WriteLine($"Parsed budget response: {budgetResponse.TotalCost} for {budgetResponse.Items.Length} items.");
+
+    return Results.Ok(new BudgetResponse(budgetResponse.Items, budgetResponse.TotalCost, budgetResponse.Note)); 
+
     }
 
     if (!parsed)
