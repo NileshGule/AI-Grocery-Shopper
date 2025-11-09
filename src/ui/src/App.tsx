@@ -74,7 +74,7 @@ function App() {
 
           <MealPlanDisplay mealPlan={result.mealPlanResponse} budget={requestedBudget} onStepComplete={addStep} />
           <InventoryDisplay inventory={result.inventoryResponse} budget={requestedBudget} onStepComplete={addStep} />
-          <BudgetDisplay budget={result.budgetResponse} requestedBudget={requestedBudget} />
+          <BudgetDisplay budget={result.budgetResponse} requestedBudget={requestedBudget} onStepComplete={addStep} />
           <ShoppingDisplay shopping={result.shopperResponse} />
 
           {result.errors.length > 0 && (

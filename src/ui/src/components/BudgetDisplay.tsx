@@ -5,14 +5,17 @@ import { ShoppingDisplay } from "./ShoppingDisplay";
 interface BudgetDisplayProps {
   budget: BudgetResponse | null;
   requestedBudget: number;
+  onStepComplete?: (step: string) => void;
 }
 export const BudgetDisplay: React.FC<BudgetDisplayProps> = ({
   budget,
   requestedBudget,
+  onStepComplete,
 }) => {
   const [shoppingResponse, setShoppingResponse] = useState<ShopperResponse | null>(null);
   const [isPreparingList, setIsPreparingList] = useState(false);
   const [shoppingError, setShoppingError] = useState<string | null>(null);
+  const [shoppingListCompleted, setShoppingListCompleted] = useState(false);
 
   if (!budget) return null;
 
@@ -27,6 +30,7 @@ export const BudgetDisplay: React.FC<BudgetDisplayProps> = ({
 
     setIsPreparingList(true);
     setShoppingError(null);
+    setShoppingListCompleted(false);
     
     try {
       const response = await fetch('http://localhost:5004/prepare-shopping-list', {
@@ -43,6 +47,12 @@ export const BudgetDisplay: React.FC<BudgetDisplayProps> = ({
 
       const data: ShopperResponse = await response.json();
       setShoppingResponse(data);
+      setShoppingListCompleted(true);
+      
+      // Update progress steps
+      if (onStepComplete) {
+        onStepComplete("Shopping list prepared successfully");
+      }
     } catch (error) {
       console.error('Error preparing shopping list:', error);
       setShoppingError(error instanceof Error ? error.message : 'Failed to prepare shopping list');
@@ -143,6 +153,13 @@ export const BudgetDisplay: React.FC<BudgetDisplayProps> = ({
           )}
         </button>
       </div>
+
+      {shoppingListCompleted && !shoppingError && (
+        <div className="alert alert-success mt-3 shadow-sm" role="alert">
+          <i className="bi bi-check-circle-fill me-2"></i>
+          <strong>Success!</strong> Shopping list has been prepared successfully.
+        </div>
+      )}
 
       {shoppingError && (
         <div className="alert alert-danger mt-3" role="alert">
