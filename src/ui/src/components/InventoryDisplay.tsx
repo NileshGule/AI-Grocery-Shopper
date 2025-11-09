@@ -170,7 +170,7 @@ export const InventoryDisplay: React.FC<InventoryDisplayProps> = ({
 
       {budgetResponse && (
         <div className="mt-4">
-          <BudgetDisplay budget={budgetResponse} requestedBudget={budget} />
+          <BudgetDisplay budget={budgetResponse} requestedBudget={budget} onStepComplete={onStepComplete} />
         </div>
       )}
     </div>

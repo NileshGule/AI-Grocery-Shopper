@@ -143,7 +143,7 @@ export const MealPlanDisplay: React.FC<MealPlanDisplayProps> = ({
 
       {inventoryResponse && (
         <div className="mt-4">
-          <InventoryDisplay inventory={inventoryResponse} budget={budget} />
+          <InventoryDisplay inventory={inventoryResponse} budget={budget} onStepComplete={onStepComplete} />
         </div>
       )}
     </div>

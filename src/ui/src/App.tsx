@@ -35,12 +35,15 @@ function App() {
   };
 
   const addStep = (step: string) => {
-    if (result) {
-      setResult({
-        ...result,
-        steps: [...result.steps, step],
-      });
-    }
+    setResult((prevResult) => {
+      if (prevResult) {
+        return {
+          ...prevResult,
+          steps: [...prevResult.steps, step],
+        };
+      }
+      return prevResult;
+    });
   };
 
   return (
