@@ -73,7 +73,7 @@ function App() {
           )}
 
           <MealPlanDisplay mealPlan={result.mealPlanResponse} budget={requestedBudget} onStepComplete={addStep} />
-          <InventoryDisplay inventory={result.inventoryResponse} budget={requestedBudget} />
+          <InventoryDisplay inventory={result.inventoryResponse} budget={requestedBudget} onStepComplete={addStep} />
           <BudgetDisplay budget={result.budgetResponse} requestedBudget={requestedBudget} />
           <ShoppingDisplay shopping={result.shopperResponse} />
 

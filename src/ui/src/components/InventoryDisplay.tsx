@@ -5,14 +5,17 @@ import { BudgetDisplay } from "./BudgetDisplay";
 interface InventoryDisplayProps {
   inventory: InventoryResponse | null;
   budget: number;
+  onStepComplete?: (step: string) => void;
 }
 export const InventoryDisplay: React.FC<InventoryDisplayProps> = ({
   inventory,
   budget,
+  onStepComplete,
 }) => {
   const [budgetResponse, setBudgetResponse] = useState<BudgetResponse | null>(null);
   const [isCheckingBudget, setIsCheckingBudget] = useState(false);
   const [budgetError, setBudgetError] = useState<string | null>(null);
+  const [showSuccessIndicator, setShowSuccessIndicator] = useState(false);
 
   if (!inventory) return null;
 
@@ -24,6 +27,7 @@ export const InventoryDisplay: React.FC<InventoryDisplayProps> = ({
 
     setIsCheckingBudget(true);
     setBudgetError(null);
+    setShowSuccessIndicator(false);
     
     try {
       const response = await fetch('http://localhost:5001/check-budget', {
@@ -40,6 +44,17 @@ export const InventoryDisplay: React.FC<InventoryDisplayProps> = ({
 
       const data: BudgetResponse = await response.json();
       setBudgetResponse(data);
+      setShowSuccessIndicator(true);
+      
+      // Update steps progress to indicate completion
+      if (onStepComplete) {
+        onStepComplete(`Budget check completed: ${inventory.missing.length} missing items analyzed - Total cost: $${data.totalCost.toFixed(2)} of $${budget} budget`);
+      }
+      
+      // Hide success indicator after 3 seconds
+      setTimeout(() => {
+        setShowSuccessIndicator(false);
+      }, 3000);
     } catch (error) {
       console.error('Error checking budget:', error);
       setBudgetError(error instanceof Error ? error.message : 'Failed to check budget');
@@ -137,6 +152,13 @@ export const InventoryDisplay: React.FC<InventoryDisplayProps> = ({
             </>
           )}
         </button>
+        
+        {showSuccessIndicator && (
+          <div className="alert alert-success mt-3 d-inline-flex align-items-center animate__animated animate__fadeIn" role="alert">
+            <i className="bi bi-check-circle-fill me-2"></i>
+            Budget check completed successfully!
+          </div>
+        )}
       </div>
 
       {budgetError && (
