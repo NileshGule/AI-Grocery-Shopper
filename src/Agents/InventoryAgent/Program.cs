@@ -3,9 +3,21 @@ using Microsoft.Extensions.Hosting;
 using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
 // builder.WebHost.UseUrls("http://0.0.0.0:80");
 builder.WebHost.UseUrls("http://0.0.0.0:5002");
 var app = builder.Build();
+
+app.UseCors();
 
 app.MapGet("/health", () => Results.Ok("InventoryAgent OK")).DisableAntiforgery();
 

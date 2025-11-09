@@ -1,12 +1,53 @@
-import React from "react";
-import { MealPlanResponse } from "../types";
+import React, { useState } from "react";
+import { MealPlanResponse, InventoryResponse } from "../types";
+import { InventoryDisplay } from "./InventoryDisplay";
+
 interface MealPlanDisplayProps {
   mealPlan: MealPlanResponse | null;
 }
 export const MealPlanDisplay: React.FC<MealPlanDisplayProps> = ({
   mealPlan,
 }) => {
+  const [inventoryResponse, setInventoryResponse] = useState<InventoryResponse | null>(null);
+  const [isCheckingInventory, setIsCheckingInventory] = useState(false);
+  const [inventoryError, setInventoryError] = useState<string | null>(null);
+
   if (!mealPlan || !mealPlan.meals.length) return null;
+
+  // Extract unique ingredients from all meals
+  const getUniqueIngredients = (): string[] => {
+    const allIngredients = mealPlan.meals.flatMap(meal => meal.ingredients);
+    return Array.from(new Set(allIngredients));
+  };
+
+  const handleCheckInventory = async () => {
+    setIsCheckingInventory(true);
+    setInventoryError(null);
+    
+    try {
+      const uniqueIngredients = getUniqueIngredients();
+      const response = await fetch('http://localhost:5002/inventory-check', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ Items: uniqueIngredients }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data: InventoryResponse = await response.json();
+      setInventoryResponse(data);
+    } catch (error) {
+      console.error('Error checking inventory:', error);
+      setInventoryError(error instanceof Error ? error.message : 'Failed to check inventory');
+    } finally {
+      setIsCheckingInventory(false);
+    }
+  };
+
   return (
     <div className="mb-4">
       {" "}
@@ -48,6 +89,39 @@ export const MealPlanDisplay: React.FC<MealPlanDisplayProps> = ({
           </div>
         ))}{" "}
       </div>{" "}
+      
+      <div className="mt-4 text-center">
+        <button 
+          className="btn btn-primary"
+          onClick={handleCheckInventory}
+          disabled={isCheckingInventory}
+        >
+          {isCheckingInventory ? (
+            <>
+              <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+              Checking Inventory...
+            </>
+          ) : (
+            <>
+              <i className="bi bi-box-seam me-2"></i>
+              Check Inventory
+            </>
+          )}
+        </button>
+      </div>
+
+      {inventoryError && (
+        <div className="alert alert-danger mt-3" role="alert">
+          <i className="bi bi-exclamation-triangle me-2"></i>
+          Error: {inventoryError}
+        </div>
+      )}
+
+      {inventoryResponse && (
+        <div className="mt-4">
+          <InventoryDisplay inventory={inventoryResponse} />
+        </div>
+      )}
     </div>
   );
 };
