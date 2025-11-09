@@ -17,7 +17,7 @@ using Microsoft.Extensions.AI;
 using OpenAI;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.WebHost.UseUrls("http://0.0.0.0:80");
+builder.WebHost.UseUrls("http://0.0.0.0:5001");
 
 // Load prices from prices.json in app base dir
 var priceFile = Path.Combine(AppContext.BaseDirectory, "prices.json");
@@ -87,7 +87,7 @@ Requirements:
         var apiKey = Environment.GetEnvironmentVariable("AZURE_FOUNDRY_OPENAI_APIKEY");
         var model = "gpt-4.1-mini";
 
-        lastRaw = await client.GenerateTextAsync(systemMsg, attemptPrompt);
+        // lastRaw = await client.GenerateTextAsync(systemMsg, attemptPrompt);
 
         JsonElement schema = AIJsonUtilities.CreateJsonSchema(typeof(BudgetResponse));
 

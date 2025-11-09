@@ -20,7 +20,8 @@ using OpenAI;
 var builder = WebApplication.CreateBuilder(args);
 
 // Ensure the app listens on all network interfaces inside the container
-builder.WebHost.UseUrls("http://0.0.0.0:80");
+// builder.WebHost.UseUrls("http://0.0.0.0:80");
+builder.WebHost.UseUrls("http://0.0.0.0:5003");
 
 // builder.Services.AddSingleton<IModelClient, Common.ModelClient.LocalModelClient>();
 builder.Services.AddSingleton<IModelClient, Common.ModelClient.AzureFoundryModelClient>();

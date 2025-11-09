@@ -19,11 +19,11 @@ builder.Services.AddHttpClient();
 
 // Persist data protection keys to a shared folder so antiforgery (and other protected payloads)
 // can be decrypted after container restarts or across multiple instances.
-var keysFolder = builder.Configuration["DataProtection:KeyPath"] ?? "/keys";
-Directory.CreateDirectory(keysFolder);
-builder.Services.AddDataProtection()
-    .PersistKeysToFileSystem(new DirectoryInfo(keysFolder))
-    .SetApplicationName("AI-Grocery-Shopper");
+// var keysFolder = builder.Configuration["DataProtection:KeyPath"] ?? "/keys";
+// Directory.CreateDirectory(keysFolder);
+// builder.Services.AddDataProtection()
+//     .PersistKeysToFileSystem(new DirectoryInfo(keysFolder))
+//     .SetApplicationName("AI-Grocery-Shopper");
 
 // Register agent orchestrator implementation
 builder.Services.AddScoped<IAgentOrchestrator, AgentOrchestrator>();

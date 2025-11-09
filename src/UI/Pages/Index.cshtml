@@ -99,22 +99,15 @@
         <h2 class="h5">Shopping</h2>
         @if (Model.Result.ShopperResponse != null)
         {
-            <div>Summary: @Model.Result.ShopperResponse.Summary</div>
-            @if (Model.Result.ShopperResponse.Categories != null && Model.Result.ShopperResponse.Categories.Any())
+            <div>Summary</div>
+            @if (Model.Result.ShopperResponse.CategorizedItems != null && Model.Result.ShopperResponse.CategorizedItems.Any())
             {
-                foreach (var cat in Model.Result.ShopperResponse.Categories)
+                foreach (var cat in Model.Result.ShopperResponse.CategorizedItems)
                 {
                     <div class="mt-3">
                         <h3>@cat.Key</h3>
-                        <ul>
-                            @foreach (var item in cat.Value)
-                            {
-                                <li>
-                                    <strong>@item.Name</strong>
-                                    <div class="text-muted">@item.Description</div>
-                                </li>
-                            }
-                        </ul>
+                        <br/>
+                        <div>@cat.Value</div>
                     </div>
                 }
             }

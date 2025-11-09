@@ -5,10 +5,17 @@ using Common.ModelClient;
 using System.Text.Json;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Extensions.AI;
+using Azure.AI.OpenAI;
+using Azure.Identity;
+using Microsoft.Agents.AI;
+using Microsoft.Extensions.AI;
+using OpenAI;
 
 var builder = WebApplication.CreateBuilder(args);
 // Ensure the app listens on all network interfaces inside the container
-builder.WebHost.UseUrls("http://0.0.0.0:80");
+// builder.WebHost.UseUrls("http://0.0.0.0:80");
+builder.WebHost.UseUrls("http://0.0.0.0:5004");
 
 builder.Services.AddSingleton<IModelClient, Common.ModelClient.LocalModelClient>();
 
@@ -56,7 +63,11 @@ app.MapPost("/prepare-shopping-list", async (ShoppingRequest req, IModelClient c
     }
 
     // Ask LLM to provide friendly descriptions for each item
-    var systemMsg = "You are an assistant that, given a JSON array of product names, returns ONLY a JSON object mapping each product to a short friendly description (one sentence). The description should be lavish Michaline style names. The output must be a single valid JSON object with product names as keys and descriptions as values. No extra text. Use the exact product strings as keys.";
+    var systemMsg = $@"You are an assistant that, given a JSON array of product names, returns ONLY a JSON object mapping each product to a short friendly description (one sentence). 
+    The description should be lavish Michaline style names. 
+    The output must be a single valid JSON object with product names as keys and descriptions as values. 
+    No extra text. 
+    Use the exact product strings as keys.";
 
     // Include a short example to encourage stable keys
     var example = new { example_items = new[] { "spaghetti", "tomato" }, example_output = new { spaghetti = "Long thin pasta, typically made from wheat.", tomato = "A versatile red fruit used in salads and sauces." } };
@@ -66,95 +77,47 @@ app.MapPost("/prepare-shopping-list", async (ShoppingRequest req, IModelClient c
         items = items
     };
 
-    var llmResp = await client.GenerateTextAsync(systemMsg, System.Text.Json.JsonSerializer.Serialize(promptPayload));
+    var endpoint = "https://ai-foundry-ai-hub.openai.azure.com/";
+    var apiKey = Environment.GetEnvironmentVariable("AZURE_FOUNDRY_OPENAI_APIKEY");
+    var model = "gpt-4.1-mini";
 
-    // Parse LLM response defensively into a case-insensitive dictionary keyed by lower-case item name
-    var descriptions = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-    try
-    {
-        var start = llmResp.IndexOf('{');
-        var end = llmResp.LastIndexOf('}');
-        var json = llmResp;
-        if (start >= 0 && end > start) json = llmResp[start..(end + 1)];
-        using var doc = JsonDocument.Parse(json);
-        var root = doc.RootElement;
-        if (root.ValueKind == JsonValueKind.Object)
-        {
-            foreach (var prop in root.EnumerateObject())
-            {
-                var key = prop.Name.Trim();
-                var val = prop.Value.ValueKind == JsonValueKind.String ? prop.Value.GetString() ?? string.Empty : prop.Value.ToString();
-                if (!string.IsNullOrWhiteSpace(key) && !string.IsNullOrWhiteSpace(val))
-                {
-                    descriptions[key.ToLowerInvariant()] = val.Trim();
-                }
-            }
-        }
-    }
-    catch (Exception ex)
-    {
-        Console.Error.WriteLine("ShopperAgent: failed to parse LLM descriptions: " + ex.Message);
-    }
+    JsonElement schema = AIJsonUtilities.CreateJsonSchema(typeof(ShoppingResponse));
 
-    // If any item is missing a description, call the LLM per-item as a fallback to ensure every item has a description
-    foreach (var it in items)
+    ChatOptions chatOptions = new()
     {
-        var key = it?.Trim() ?? string.Empty;
-        if (string.IsNullOrEmpty(key)) continue;
-        var lookup = key.ToLowerInvariant();
-        if (!descriptions.ContainsKey(lookup) || string.IsNullOrWhiteSpace(descriptions[lookup]))
-        {
-            // Per-item prompt: ask for a single-sentence description only
-            var perItemSystem = "You are a an assistant that returns a single sentence description for the provided product name. Only output the description sentence in Michelin style, no JSON or extra text.";
-            var perItemPrompt = key;
-            try
-            {
-                var singleResp = await client.GenerateTextAsync(perItemSystem, perItemPrompt);
-                // trim quotes/braces and whitespace
-                var cleaned = singleResp.Trim();
-                if (cleaned.StartsWith("\"") && cleaned.EndsWith("\"")) cleaned = cleaned[1..^1].Trim();
-                // If LLM returned JSON like { "item": "desc" }, attempt to extract string content
-                if (cleaned.StartsWith("{") && cleaned.EndsWith("}"))
-                {
-                    try
-                    {
-                        using var d = JsonDocument.Parse(cleaned);
-                        var r = d.RootElement;
-                        if (r.ValueKind == JsonValueKind.Object && r.EnumerateObject().Any())
-                        {
-                            var first = r.EnumerateObject().First();
-                            cleaned = first.Value.GetString() ?? cleaned;
-                        }
-                    }
-                    catch { }
-                }
-
-                if (!string.IsNullOrWhiteSpace(cleaned)) descriptions[lookup] = cleaned.Trim();
-            }
-            catch (Exception ex)
-            {
-                Console.Error.WriteLine($"ShopperAgent: per-item LLM call failed for '{key}': {ex.Message}");
-                descriptions[lookup] = "No description available";
-            }
-        }
-    }
-
-    // Build final JSON structure, map descriptions case-insensitively back to original item casing
-    var final = new
-    {
-        categories = categorized.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Select(i => new
-        {
-            name = i,
-            description = descriptions.TryGetValue(i.ToLowerInvariant(), out var d) ? d : ""
-        }))
+        ResponseFormat = ChatResponseFormat.ForJsonSchema(
+            schema: schema,
+            schemaName: "ShoppingResponse",
+            schemaDescription: "Information about a shopping list including its categories and items")
     };
 
-    Console.WriteLine("ShopperAgent: prepared shopping list with categories and descriptions.");
-    Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(final));
+    AIAgent agent = new AzureOpenAIClient(
+    new Uri(endpoint),
+    new AzureCliCredential())
+        .GetChatClient(model)
+        .CreateAIAgent(
+            new ChatClientAgentOptions()
+            {
+                Name = "ShopperAgent",
+                Instructions = systemMsg,
+                ChatOptions = chatOptions
+            }
+    );
 
-    return Results.Ok(final);
+    var agentResponse = await agent.RunAsync(JsonSerializer.Serialize(promptPayload));
+
+    Console.WriteLine($"LLM Response: {agentResponse.Text}");
+
+    var shoppingResponse = agentResponse.Deserialize<ShoppingResponse>(JsonSerializerOptions.Web);
+
+    Console.WriteLine($"Parsed {shoppingResponse.CategorizedItems.Count} categories from LLM response.");
+
+    return Results.Ok(shoppingResponse);
+
 });
 
 app.Run();
 
 public record ShoppingRequest(string[] Items);
+
+public record ShoppingResponse(Dictionary<string, string> CategorizedItems);

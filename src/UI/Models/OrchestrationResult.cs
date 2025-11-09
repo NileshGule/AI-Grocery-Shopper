@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using System.Text.Json.Serialization;
+    using System.Text.Json.Serialization;
 
 namespace UI.Models
 {
@@ -47,13 +47,14 @@ namespace UI.Models
 
     public class ShopperResponse
     {
-        // maps to the ShopperAgent output: { "categories": { "CategoryName": [ { "name": "...", "description": "..." }, ... ] } }
-        [JsonPropertyName("categories")]
-        public Dictionary<string, List<ShopItem>> Categories { get; set; } = new();
+        public Dictionary<string, string> CategorizedItems { get; set; } = new();
+        // // maps to the ShopperAgent output: { "categories": { "CategoryName": [ { "name": "...", "description": "..." }, ... ] } }
+        // [JsonPropertyName("categories")]
+        // public Dictionary<string, List<ShopItem>> Categories { get; set; } = new();
 
-        // Optional summary field if agents include one in future
-        [JsonPropertyName("summary")]
-        public string Summary { get; set; } = string.Empty;
+        // // Optional summary field if agents include one in future
+        // [JsonPropertyName("summary")]
+        // public string Summary { get; set; } = string.Empty;
     }
 
     public class ShopItem
