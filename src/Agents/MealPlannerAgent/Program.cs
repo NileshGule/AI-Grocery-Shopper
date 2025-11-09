@@ -19,6 +19,16 @@ using OpenAI;
 // Declare the WebApplication builder before using it to fix undefined 'builder' errors.
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
+
 // Ensure the app listens on all network interfaces inside the container
 // builder.WebHost.UseUrls("http://0.0.0.0:80");
 builder.WebHost.UseUrls("http://0.0.0.0:5003");
@@ -27,6 +37,7 @@ builder.WebHost.UseUrls("http://0.0.0.0:5003");
 builder.Services.AddSingleton<IModelClient, Common.ModelClient.AzureFoundryModelClient>();
 
 var app = builder.Build();
+app.UseCors();
 
 app.MapGet("/health", () => Results.Ok("MealPlannerAgent OK"));
 
