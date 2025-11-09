@@ -7,7 +7,10 @@ export const ShoppingDisplay: React.FC<ShoppingDisplayProps> = ({
   shopping,
 }) => {
   if (!shopping || !shopping.categorizedItems) return null;
-  const categories = Object.entries(shopping.categorizedItems);
+  const items = Object.entries(shopping.categorizedItems);
+  
+  if (items.length === 0) return null;
+
   return (
     <div className="mb-4">
       {" "}
@@ -15,44 +18,25 @@ export const ShoppingDisplay: React.FC<ShoppingDisplayProps> = ({
         {" "}
         <i className="bi bi-cart me-2"></i> Shopping List{" "}
       </h2>{" "}
-      <div className="accordion" id="shoppingAccordion">
+      <div className="card shadow-sm">
         {" "}
-        {categories.map(([category, items], index) => (
-          <div key={index} className="accordion-item">
+        <div className="card-body">
+          {" "}
+          <ul className="list-group list-group-flush">
             {" "}
-            <h2 className="accordion-header">
-              {" "}
-              <button
-                className={`accordion-button ${index !== 0 ? "collapsed" : ""}`}
-                type="button"
-                data-bs-toggle="collapse"
-                data-bs-target={`#collapse${index}`}
-                aria-expanded={index === 0}
-                aria-controls={`collapse${index}`}
-              >
+            {items.map(([ingredient, description], index) => (
+              <li key={index} className="list-group-item d-flex justify-content-between align-items-center">
                 {" "}
-                <i className="bi bi-basket me-2"></i>{" "}
-                <strong>{category}</strong>{" "}
-              </button>{" "}
-            </h2>{" "}
-            <div
-              id={`collapse${index}`}
-              className={`accordion-collapse collapse ${
-                index === 0 ? "show" : ""
-              }`}
-              data-bs-parent="#shoppingAccordion"
-            >
-              {" "}
-              <div className="accordion-body">
-                {" "}
-                <div className="card bg-light">
+                <div>
                   {" "}
-                  <div className="card-body"> {items} </div>{" "}
+                  <i className="bi bi-cart-check text-success me-2"></i>
+                  <strong className="text-capitalize">{ingredient}:</strong>{" "}
+                  <span className="text-muted">{description}</span>
                 </div>{" "}
-              </div>{" "}
-            </div>{" "}
-          </div>
-        ))}{" "}
+              </li>
+            ))}{" "}
+          </ul>{" "}
+        </div>{" "}
       </div>{" "}
     </div>
   );

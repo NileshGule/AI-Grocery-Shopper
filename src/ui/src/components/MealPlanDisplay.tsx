@@ -13,6 +13,7 @@ export const MealPlanDisplay: React.FC<MealPlanDisplayProps> = ({
   const [inventoryResponse, setInventoryResponse] = useState<InventoryResponse | null>(null);
   const [isCheckingInventory, setIsCheckingInventory] = useState(false);
   const [inventoryError, setInventoryError] = useState<string | null>(null);
+  const [inventoryCheckedSuccess, setInventoryCheckedSuccess] = useState(false);
 
   if (!mealPlan || !mealPlan.meals.length) return null;
 
@@ -25,6 +26,7 @@ export const MealPlanDisplay: React.FC<MealPlanDisplayProps> = ({
   const handleCheckInventory = async () => {
     setIsCheckingInventory(true);
     setInventoryError(null);
+    setInventoryCheckedSuccess(false);
     
     try {
       const uniqueIngredients = getUniqueIngredients();
@@ -42,6 +44,7 @@ export const MealPlanDisplay: React.FC<MealPlanDisplayProps> = ({
 
       const data: InventoryResponse = await response.json();
       setInventoryResponse(data);
+      setInventoryCheckedSuccess(true);
     } catch (error) {
       console.error('Error checking inventory:', error);
       setInventoryError(error instanceof Error ? error.message : 'Failed to check inventory');
@@ -111,6 +114,16 @@ export const MealPlanDisplay: React.FC<MealPlanDisplayProps> = ({
           )}
         </button>
       </div>
+
+      {inventoryCheckedSuccess && (
+        <div className="alert alert-success mt-3" role="alert">
+          <i className="bi bi-check-circle-fill me-2"></i>
+          <strong>Success!</strong> Inventory has been checked successfully. 
+          {inventoryResponse && (
+            <span> Found {inventoryResponse.available.length} available item(s) and {inventoryResponse.missing.length} missing item(s).</span>
+          )}
+        </div>
+      )}
 
       {inventoryError && (
         <div className="alert alert-danger mt-3" role="alert">

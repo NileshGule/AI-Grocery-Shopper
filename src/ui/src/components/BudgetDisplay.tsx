@@ -1,5 +1,7 @@
-import React from "react";
-import { BudgetResponse } from "../types";
+import React, { useState } from "react";
+import { BudgetResponse, ShopperResponse } from "../types";
+import { ShoppingDisplay } from "./ShoppingDisplay";
+
 interface BudgetDisplayProps {
   budget: BudgetResponse | null;
   requestedBudget: number;
@@ -8,9 +10,47 @@ export const BudgetDisplay: React.FC<BudgetDisplayProps> = ({
   budget,
   requestedBudget,
 }) => {
+  const [shoppingResponse, setShoppingResponse] = useState<ShopperResponse | null>(null);
+  const [isPreparingList, setIsPreparingList] = useState(false);
+  const [shoppingError, setShoppingError] = useState<string | null>(null);
+
   if (!budget) return null;
+
   const isOverBudget = budget.totalCost > requestedBudget;
   const percentageUsed = (budget.totalCost / requestedBudget) * 100;
+
+  const handlePrepareShoppingList = async () => {
+    if (budget.items.length === 0) {
+      setShoppingError("No items to prepare shopping list for.");
+      return;
+    }
+
+    setIsPreparingList(true);
+    setShoppingError(null);
+    
+    try {
+      const response = await fetch('http://localhost:5004/prepare-shopping-list', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ items: budget.items }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data: ShopperResponse = await response.json();
+      setShoppingResponse(data);
+    } catch (error) {
+      console.error('Error preparing shopping list:', error);
+      setShoppingError(error instanceof Error ? error.message : 'Failed to prepare shopping list');
+    } finally {
+      setIsPreparingList(false);
+    }
+  };
+
   return (
     <div className="mb-4">
       {" "}
@@ -83,6 +123,39 @@ export const BudgetDisplay: React.FC<BudgetDisplayProps> = ({
           </div>{" "}
         </div>{" "}
       </div>{" "}
+
+      <div className="mt-4 text-center">
+        <button 
+          className="btn btn-info text-white"
+          onClick={handlePrepareShoppingList}
+          disabled={isPreparingList || budget.items.length === 0}
+        >
+          {isPreparingList ? (
+            <>
+              <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+              Preparing Shopping List...
+            </>
+          ) : (
+            <>
+              <i className="bi bi-cart-plus me-2"></i>
+              Prepare Shopping List
+            </>
+          )}
+        </button>
+      </div>
+
+      {shoppingError && (
+        <div className="alert alert-danger mt-3" role="alert">
+          <i className="bi bi-exclamation-triangle me-2"></i>
+          Error: {shoppingError}
+        </div>
+      )}
+
+      {shoppingResponse && (
+        <div className="mt-4">
+          <ShoppingDisplay shopping={shoppingResponse} />
+        </div>
+      )}
     </div>
   );
 };
