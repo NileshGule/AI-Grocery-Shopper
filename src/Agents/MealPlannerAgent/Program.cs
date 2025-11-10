@@ -1,19 +1,21 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+
+using Microsoft.Agents.AI;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.AI;
+
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Common.ModelClient;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using System.Linq;
-using System.Collections.Generic;
-using System;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using Microsoft.Extensions.AI;
+
 using Azure.AI.OpenAI;
 using Azure.Identity;
-using Microsoft.Agents.AI;
-using Microsoft.Extensions.AI;
+
+using Common.ModelClient;
+
 using OpenAI;
 
 // Declare the WebApplication builder before using it to fix undefined 'builder' errors.
