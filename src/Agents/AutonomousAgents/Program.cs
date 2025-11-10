@@ -33,10 +33,12 @@ public static class Program
         AIAgent mealPlannerAgent = GetMealPlannerAgent(chatClient);
         AIAgent inventoryAgent = GetInventoryAgent(chatClient);
         AIAgent budgetAgent = GetBudgetAgent(chatClient);
+        AIAgent shoppingAgent = GetShoppingAgent(chatClient);
 
         MealPlanExecutor mealPlanExecutor = new(mealPlannerAgent);
         InventoryCheckExecutor inventoryCheckExecutor = new(inventoryAgent);
         BudgetExecutor budgetExecutor = new(budgetAgent);
+        ShoppingExecutor shoppingExecutor = new(shoppingAgent);
 
         // Execute the workflow
 
@@ -61,6 +63,8 @@ public static class Program
             .WithOutputFrom(mealPlanExecutor)
             .AddEdge<BudgetResponse>(inventoryCheckExecutor, budgetExecutor)
             .WithOutputFrom(inventoryCheckExecutor)
+            .AddEdge<ShoppingResponse>(budgetExecutor, shoppingExecutor)
+            .WithOutputFrom(budgetExecutor)
             .Build();
 
         Console.WriteLine("Starting workflow execution...");
@@ -93,20 +97,9 @@ public static class Program
                 Console.WriteLine($"{executorComplete.ExecutorId}: {executorComplete.Data}");
             }
         }
-
-        // Cleanup the agents created for the sample.
-        // await persistentAgentsClient.Administration.DeleteAgentAsync(frenchAgent.Id);
-        // await persistentAgentsClient.Administration.DeleteAgentAsync(spanishAgent.Id);
-        // await persistentAgentsClient.Administration.DeleteAgentAsync(englishAgent.Id);
     }
 
-    /// <summary>
-    /// Creates a translation agent for the specified target language.
-    /// </summary>
-    /// <param name="targetLanguage">The target language for translation</param>
-    /// <param name="persistentAgentsClient">The PersistentAgentsClient to create the agent</param>
-    /// <param name="model">The model to use for the agent</param>
-    /// <returns>A ChatClientAgent configured for the specified language</returns>
+    
     private static AIAgent GetMealPlannerAgent(
         IChatClient chatClient)
     {
@@ -146,7 +139,7 @@ public static class Program
                 ResponseFormat = ChatResponseFormat.ForJsonSchema<BudgetResponse>()
             }
         });
-}
+    }
 
     private static ChatClientAgent GetInventoryAgent(IChatClient chatClient) =>
         new(chatClient, new ChatClientAgentOptions(instructions: "You are a inventory checking agent.")
@@ -156,6 +149,51 @@ public static class Program
                 ResponseFormat = ChatResponseFormat.ForJsonSchema<InventoryResponse>()
             }
         });
+
+    private static ChatClientAgent GetShoppingAgent(IChatClient chatClient)
+    {
+        // Ask LLM to provide friendly descriptions for each item
+        var systemMsg = $@"You are an assistant that, given a JSON array of product names, returns ONLY a JSON object mapping each product to a short friendly description (one sentence). 
+    The description should be lavish Michaline style names. 
+    The output must be a single valid JSON object with product names as keys and descriptions as values. 
+    No extra text. 
+    Use the exact product strings as keys.";
+
+        return new(chatClient, new ChatClientAgentOptions(instructions: systemMsg)
+        {
+            ChatOptions = new()
+            {
+                ResponseFormat = ChatResponseFormat.ForJsonSchema<ShoppingResponse>()
+            }
+        });
+    }
+}
+
+internal sealed class ShoppingExecutor : Executor<BudgetResponse, ShoppingResponse>
+{
+    private readonly AIAgent _shoppingAgent;
+
+    public ShoppingExecutor(AIAgent shoppingAgent) : base("ShoppingExecutor")
+    {
+        _shoppingAgent = shoppingAgent;
+    }
+    public override async ValueTask<ShoppingResponse> HandleAsync(BudgetResponse input, IWorkflowContext context, CancellationToken cancellationToken = default)
+    {
+        Console.WriteLine("Starting ShoppingExecutor...");
+
+        var prompt = @$"Given the following list of items, return a JSON object mapping each item to a short friendly description.\n
+        Items: {JsonSerializer.Serialize(input.Items)}";
+
+        var agentResponse = await _shoppingAgent.RunAsync(prompt);
+
+        Console.WriteLine($"LLM Response: {agentResponse.Text}");
+
+        var shoppingResponse = agentResponse.Deserialize<ShoppingResponse>(JsonSerializerOptions.Web);
+
+        Console.WriteLine($"Parsed shopping response: {shoppingResponse.CategorizedItems.Count} items.");
+
+        return new ShoppingResponse(shoppingResponse.CategorizedItems);
+    }
 }
 
 internal sealed class MealPlanExecutor : Executor<ChatMessage, MealPlanResponse>
@@ -175,11 +213,11 @@ internal sealed class MealPlanExecutor : Executor<ChatMessage, MealPlanResponse>
         Console.WriteLine($"LLM Response: {agentResponse.Text}");
 
         var meals = agentResponse.Deserialize<MealPlanResponse>(JsonSerializerOptions.Web);
-        
+
         Console.WriteLine($"Parsed {meals.Meals.Count} meals from LLM response.");
 
         return new MealPlanResponse(meals.Meals);
-        
+
     }
 }
 
@@ -284,3 +322,5 @@ public class MealDto
 public record InventoryResponse(string[] Available, string[] Missing);
 
 public record BudgetResponse(string[] Items, float TotalCost, string Note);
+
+public record ShoppingResponse(Dictionary<string, string> CategorizedItems);
