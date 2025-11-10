@@ -2,6 +2,8 @@ using System.Text.Json;
 using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
 using AutonomousAgents.Models;
+using OpenTelemetry;
+using OpenTelemetry.Trace;
 
 namespace AutonomousAgents.Agents;
 
@@ -15,6 +17,12 @@ public static class AgentFactory
     /// </summary>
     public static AIAgent CreateMealPlannerAgent(IChatClient chatClient)
     {
+        // Create a TracerProvider that exports to the console
+        using var tracerProvider = Sdk.CreateTracerProviderBuilder()
+            .AddSource("agent-telemetry-source")
+            .AddConsoleExporter()
+            .Build();
+    
         var systemMessage = "You are a helpful meal planning assistant. Respond ONLY with a single JSON object (no surrounding text) that matches the schema described below.";
 
         JsonElement schema = AIJsonUtilities.CreateJsonSchema(typeof(MealPlanResponse));
@@ -34,7 +42,10 @@ public static class AgentFactory
                 Instructions = systemMessage,
                 ChatOptions = chatOptions
             }
-        );
+        )
+        .AsBuilder()
+        .UseOpenTelemetry(sourceName: "agent-telemetry-source")
+        .Build();
     }
 
     /// <summary>

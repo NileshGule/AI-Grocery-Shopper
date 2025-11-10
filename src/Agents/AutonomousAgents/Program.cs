@@ -31,8 +31,8 @@ public static class Program
                 }
                 Only output valid JSON and no other text.";
 
-        var prompt = $@"Generate a meal plan for: 
-        Christmas dinner with family
+        var prompt = $@"Generate 5 meals plan for: 
+        Christmas dinner with family for 10 people
         Constraints: Gluten free, nut allergy
 
         {schemaInstruction}";

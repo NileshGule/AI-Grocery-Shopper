@@ -16,7 +16,7 @@ namespace AutonomousAgents.Executors;
 internal sealed class BudgetExecutor : Executor<InventoryResponse, BudgetResponse>
 {
     private readonly AIAgent _budgetAgent;
-    private const float DefaultBudget = 100.0f;
+    private const float DefaultBudget = 60.0f;
 
     public BudgetExecutor(AIAgent budgetAgent) : base("BudgetExecutor")
     {
@@ -69,21 +69,21 @@ internal sealed class BudgetExecutor : Executor<InventoryResponse, BudgetRespons
         var budgetService = new BudgetService(prices);
         Console.WriteLine($"BudgetService Prices count: {budgetService.Prices.Count}");
 
-        Console.WriteLine($"Received budget request: Items=[{string.Join(", ", input.Available)}], Budget={DefaultBudget}");
+        Console.WriteLine($"Received budget request: Items=[{string.Join(", ", input.Missing)}], Budget={DefaultBudget}");
 
         // Calculate total cost
-        float total = budgetService.CalculateTotal(input.Available);
+        float total = budgetService.CalculateTotal(input.Missing);
 
         Console.WriteLine($"Calculated total cost: {total}");
 
         // If within budget, return as-is
         if (total <= DefaultBudget)
         {
-            return new BudgetResponse(input.Available, total, "Within budget - no changes needed");
+            return new BudgetResponse(input.Missing, total, "Within budget - no changes needed");
         }
 
         // Otherwise, ask LLM to adjust
-        var basePrompt = $@"Original items: [{string.Join(", ", input.Available)}]
+        var basePrompt = $@"Original items: [{string.Join(", ", input.Missing)}]
 Budget: {DefaultBudget}
 CurrentTotal: {total}
 Prices: {JsonSerializer.Serialize(budgetService.Prices)}
@@ -92,7 +92,7 @@ Task: Suggest an adjusted shopping list that meets or is closest to the Budget.
 Requirements:
 - Return ONLY the JSON object: {{ ""items"": [ string ], ""totalCost"": number, ""note"": string }}.
 - items: array of product names.
-- totalCost: numeric sum computed using the provided Prices (use default price 2.0 for unknown items).
+- totalCost: numeric sum computed using the provided Prices (use default price 5.0 for unknown items).
 - note: 1-2 sentence explanation.
 - Prefer substitutions over removals. Make minimal changes needed to meet budget.";
 

@@ -37,7 +37,7 @@ public class BudgetService
         }
     }
 
-    public float CalculateTotal(IEnumerable<string> items, float defaultPrice = 2.0f)
+    public float CalculateTotal(IEnumerable<string> items, float defaultPrice = 5.0f)
     {
         float total = 0f;
         foreach (var it in items)
