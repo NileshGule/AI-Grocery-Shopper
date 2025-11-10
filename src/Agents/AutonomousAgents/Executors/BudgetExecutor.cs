@@ -31,6 +31,37 @@ internal sealed class BudgetExecutor : Executor<InventoryResponse, BudgetRespons
         Console.WriteLine("Starting BudgetExecutor...");
 
         var priceFile = Path.Combine(AppContext.BaseDirectory, "prices.json");
+        
+        // Fallback paths if not found in BaseDirectory
+        if (!File.Exists(priceFile))
+        {
+            priceFile = Path.Combine(Directory.GetCurrentDirectory(), "prices.json");
+        }
+        
+        if (!File.Exists(priceFile))
+        {
+            // Try looking in the project root
+            var projectRoot = Directory.GetCurrentDirectory();
+            while (projectRoot != null && !File.Exists(Path.Combine(projectRoot, "prices.json")))
+            {
+                var parent = Directory.GetParent(projectRoot);
+                if (parent == null) break;
+                projectRoot = parent.FullName;
+            }
+            if (projectRoot != null)
+            {
+                priceFile = Path.Combine(projectRoot, "prices.json");
+            }
+        }
+        
+        Console.WriteLine($"Loading prices from: {priceFile}");
+        
+        if (!File.Exists(priceFile))
+        {
+            Console.WriteLine($"ERROR: prices.json not found at {priceFile}");
+            throw new FileNotFoundException($"prices.json not found. Searched in: {priceFile}", "prices.json");
+        }
+        
         var prices = BudgetService.LoadPricesFromFile(priceFile);
 
         Console.WriteLine($"Loaded {prices.Count} price entries from {priceFile}");

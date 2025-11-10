@@ -32,10 +32,10 @@ public static class Program
                 Only output valid JSON and no other text.";
 
         var prompt = $@"Generate a meal plan for: 
-        Diwali 
-        Constraints: Glutten free 
+        Christmas dinner with family
+        Constraints: Gluten free, nut allergy
 
-{schemaInstruction}";
+        {schemaInstruction}";
 
         Console.WriteLine("Starting workflow execution...");
 
