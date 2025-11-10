@@ -50,7 +50,7 @@ namespace BudgetAgent
         public (List<string> Items, string Note) ParseAdjustedFromLLM(string llmResp)
         {
             Console.WriteLine($"LLM response: {llmResp}");
-            
+
             if (string.IsNullOrWhiteSpace(llmResp))
                 return (new List<string>(), "Empty response");
 
