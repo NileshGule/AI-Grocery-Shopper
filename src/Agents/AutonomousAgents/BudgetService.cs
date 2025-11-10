@@ -3,7 +3,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 
+namespace AutonomousAgents.Services;
 
+/// <summary>
+/// Service responsible for budget calculations and price management
+/// </summary>
 public class BudgetService
 {
     public Dictionary<string, float> Prices { get; }
