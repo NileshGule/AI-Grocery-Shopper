@@ -25,10 +25,7 @@ namespace Common.ModelClient
             Console.WriteLine("GenerateTextAsync called with prompt:");
             Console.WriteLine(prompt);
 
-            // _deploymentOrModelName = "deepseek-r1-7b";
             Console.WriteLine("Deployment/Model: " + _deploymentOrModelName);
-
-            // Foundry Local Initializations
 
             var key = new ApiKeyCredential("OPEN_API_KEY");
 
@@ -43,8 +40,6 @@ namespace Common.ModelClient
                 try
                 {
                     var chatClient = _openAiClient.GetChatClient(aliasOrModelId);
-
-                    // var systemMessage = "You are a helpful meal planning assistant. Respond with a list of grocery items needed for the meal plan. Limit the response to about 2000 words";
 
                     List<ChatMessage> messages =
                     [

@@ -16,6 +16,6 @@ AIAgent agent = new AzureOpenAIClient(
     new Uri(endpoint),
     new AzureCliCredential())
         .GetChatClient(model)
-        .CreateAIAgent(instructions: "You are good at telling jokes.", name: "Joker");
+        .CreateAIAgent(instructions: "You are an weather expert who answers questions in a true Aussie accent.", name: "AussieWeatherAgent");
 
-Console.WriteLine(await agent.RunAsync("Tell me a joke about Alibaba and the 40 Thieves."));
+Console.WriteLine(await agent.RunAsync("How is the weather in Melbourne in the month of November"));
