@@ -18,10 +18,10 @@ public static class AgentFactory
     public static AIAgent CreateMealPlannerAgent(IChatClient chatClient)
     {
         // Create a TracerProvider that exports to the console
-        using var tracerProvider = Sdk.CreateTracerProviderBuilder()
-            .AddSource("agent-telemetry-source")
-            .AddConsoleExporter()
-            .Build();
+        // using var tracerProvider = Sdk.CreateTracerProviderBuilder()
+        //     .AddSource("agent-telemetry-source")
+        //     .AddConsoleExporter()
+        //     .Build();
     
         var systemMessage = "You are a helpful meal planning assistant. Respond ONLY with a single JSON object (no surrounding text) that matches the schema described below.";
 
@@ -42,10 +42,10 @@ public static class AgentFactory
                 Instructions = systemMessage,
                 ChatOptions = chatOptions
             }
-        )
-        .AsBuilder()
-        .UseOpenTelemetry(sourceName: "agent-telemetry-source")
-        .Build();
+        );
+        // .AsBuilder()
+        // .UseOpenTelemetry(sourceName: "agent-telemetry-source")
+        // .Build();
     }
 
     /// <summary>
